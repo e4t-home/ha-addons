@@ -1,12 +1,40 @@
 package main
 
 import (
+	"encoding/json"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
+
+// HADevice represents a device from Home Assistant's device registry
+type HADevice struct {
+	ID              string   `json:"id"`
+	Name            string   `json:"name"`
+	NameByUser      string   `json:"name_by_user"`
+	Manufacturer    string   `json:"manufacturer"`
+	Model           string   `json:"model"`
+	AreaID          string   `json:"area_id"`
+	ConfigEntries   []string `json:"config_entries"`
+	Identifiers     [][]any  `json:"identifiers"`
+	Connections     [][]any  `json:"connections"`
+	SWVersion       string   `json:"sw_version"`
+	HWVersion       string   `json:"hw_version"`
+	SerialNumber    string   `json:"serial_number"`
+	ViaDeviceID     string   `json:"via_device_id"`
+	DisabledBy      string   `json:"disabled_by"`
+	ConfigurationURL string  `json:"configuration_url"`
+}
+
+// HAArea represents an area from Home Assistant
+type HAArea struct {
+	AreaID string `json:"area_id"`
+	Name   string `json:"name"`
+}
 
 type Server struct {
 	db   *DB
@@ -30,6 +58,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/devices/new", s.handleNewDeviceForm)
 	mux.HandleFunc("/devices/search", s.handleSearch)
 	mux.HandleFunc("/devices/", s.handleDevice)
+	mux.HandleFunc("/ha/devices", s.handleHADevices)
 
 	return mux
 }
@@ -248,4 +277,120 @@ func (s *Server) handleDeleteDevice(w http.ResponseWriter, r *http.Request, id i
 	if err := s.tmpl.ExecuteTemplate(w, "device-list", devices); err != nil {
 		log.Printf("template error: %v", err)
 	}
+}
+
+// handleHADevices fetches devices from Home Assistant's device registry
+func (s *Server) handleHADevices(w http.ResponseWriter, r *http.Request) {
+	token := os.Getenv("SUPERVISOR_TOKEN")
+	if token == "" {
+		http.Error(w, "SUPERVISOR_TOKEN not available - are you running as a Home Assistant add-on?", http.StatusServiceUnavailable)
+		return
+	}
+
+	// Fetch devices from Home Assistant
+	devices, err := s.fetchHADevices(token)
+	if err != nil {
+		log.Printf("Error fetching HA devices: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch areas to map area IDs to names
+	areas, err := s.fetchHAAreas(token)
+	if err != nil {
+		log.Printf("Error fetching HA areas: %v", err)
+		// Continue without areas - not critical
+		areas = make(map[string]string)
+	}
+
+	// Build response with area names
+	type HADeviceWithArea struct {
+		HADevice
+		AreaName string `json:"area_name"`
+	}
+
+	result := make([]HADeviceWithArea, 0, len(devices))
+	for _, d := range devices {
+		// Skip devices without a name
+		name := d.NameByUser
+		if name == "" {
+			name = d.Name
+		}
+		if name == "" {
+			continue
+		}
+
+		dwa := HADeviceWithArea{HADevice: d}
+		if d.AreaID != "" {
+			dwa.AreaName = areas[d.AreaID]
+		}
+		result = append(result, dwa)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func (s *Server) fetchHADevices(token string) ([]HADevice, error) {
+	req, err := http.NewRequest("GET", "http://supervisor/core/api/config/device_registry", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, &httpError{StatusCode: resp.StatusCode, Message: string(body)}
+	}
+
+	var devices []HADevice
+	if err := json.NewDecoder(resp.Body).Decode(&devices); err != nil {
+		return nil, err
+	}
+
+	return devices, nil
+}
+
+func (s *Server) fetchHAAreas(token string) (map[string]string, error) {
+	req, err := http.NewRequest("GET", "http://supervisor/core/api/config/area_registry", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil // Areas are optional, don't fail
+	}
+
+	var areas []HAArea
+	if err := json.NewDecoder(resp.Body).Decode(&areas); err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]string)
+	for _, a := range areas {
+		result[a.AreaID] = a.Name
+	}
+	return result, nil
+}
+
+type httpError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *httpError) Error() string {
+	return e.Message
 }

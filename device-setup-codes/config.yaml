@@ -1,6 +1,6 @@
 name: "Device Setup Codes"
 description: "Store and manage HomeKit, Matter, Ring, and Homematic setup codes"
-version: "1.0.0"
+version: "1.1.0"
 slug: "device-setup-codes"
 init: false
 arch:
@@ -13,6 +13,8 @@ ports_description:
   8099/tcp: "Web UI"
 map:
   - config:rw
+hassio_api: true
+auth_api: true
 options:
   port: 8099
 schema:

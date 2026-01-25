@@ -58,15 +58,62 @@
                 <h1 class="text-2xl font-semibold tracking-tight">Device Setup Codes</h1>
                 <p class="text-sm text-muted-foreground mt-1">Manage your IoT device pairing codes</p>
             </div>
-            <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    hx-get="devices/new"
-                    hx-target="#form-container"
-                    hx-swap="innerHTML">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 5v14m-7-7h14"/>
-                </svg>
-                Add Device
-            </button>
+            <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onclick="openHADevicePicker()">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+                        <path d="M16 16h5v5"/>
+                    </svg>
+                    Import from HA
+                </button>
+                <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                        hx-get="devices/new"
+                        hx-target="#form-container"
+                        hx-swap="innerHTML">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 5v14m-7-7h14"/>
+                    </svg>
+                    Add Device
+                </button>
+            </div>
+        </div>
+
+        <!-- HA Device Picker Modal -->
+        <div id="ha-modal" class="fixed inset-0 z-50 hidden">
+            <div class="fixed inset-0 bg-black/50" onclick="closeHAModal()"></div>
+            <div class="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-background rounded-lg shadow-lg flex flex-col max-h-[90vh]">
+                <div class="flex items-center justify-between p-4 border-b border-border">
+                    <h2 class="text-lg font-semibold">Import from Home Assistant</h2>
+                    <button onclick="closeHAModal()" class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M18 6 6 18"/>
+                            <path d="m6 6 12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-4 border-b border-border">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                        <input type="text" id="ha-search" placeholder="Search devices..."
+                               oninput="filterHADevices(this.value)"
+                               class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                    </div>
+                </div>
+                <div id="ha-device-list" class="flex-1 overflow-y-auto p-2">
+                    <div class="flex items-center justify-center py-12">
+                        <svg class="animate-spin h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Search Bar -->
@@ -95,6 +142,143 @@
             {{template "device-list" .Devices}}
         </div>
     </div>
+
+    <script>
+        let haDevices = [];
+
+        function openHADevicePicker() {
+            document.getElementById('ha-modal').classList.remove('hidden');
+            document.getElementById('ha-search').value = '';
+            fetchHADevices();
+        }
+
+        function closeHAModal() {
+            document.getElementById('ha-modal').classList.add('hidden');
+        }
+
+        async function fetchHADevices() {
+            const listEl = document.getElementById('ha-device-list');
+            listEl.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <svg class="animate-spin h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                </div>`;
+
+            try {
+                const resp = await fetch('ha/devices');
+                if (!resp.ok) {
+                    const text = await resp.text();
+                    throw new Error(text);
+                }
+                haDevices = await resp.json();
+                renderHADevices(haDevices);
+            } catch (err) {
+                listEl.innerHTML = `
+                    <div class="text-center py-12 px-4">
+                        <div class="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                            <svg class="h-6 w-6 text-destructive" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </div>
+                        <p class="text-sm text-muted-foreground">${err.message}</p>
+                    </div>`;
+            }
+        }
+
+        function filterHADevices(query) {
+            const q = query.toLowerCase();
+            const filtered = haDevices.filter(d => {
+                const name = (d.name_by_user || d.name || '').toLowerCase();
+                const manufacturer = (d.manufacturer || '').toLowerCase();
+                const model = (d.model || '').toLowerCase();
+                const area = (d.area_name || '').toLowerCase();
+                return name.includes(q) || manufacturer.includes(q) || model.includes(q) || area.includes(q);
+            });
+            renderHADevices(filtered);
+        }
+
+        function renderHADevices(devices) {
+            const listEl = document.getElementById('ha-device-list');
+
+            if (devices.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-sm text-muted-foreground">No devices found</p>
+                    </div>`;
+                return;
+            }
+
+            listEl.innerHTML = devices.map(d => {
+                const name = d.name_by_user || d.name || 'Unknown Device';
+                const manufacturer = d.manufacturer || '';
+                const model = d.model || '';
+                const area = d.area_name || '';
+                const subtitle = [manufacturer, model, area].filter(Boolean).join(' · ');
+
+                return `
+                    <button onclick='selectHADevice(${JSON.stringify(d).replace(/'/g, "&#39;")})'
+                            class="w-full flex items-center gap-3 p-3 rounded-md hover:bg-accent text-left transition-colors">
+                        <div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
+                            <svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <path d="M12 12h.01"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium truncate">${escapeHtml(name)}</div>
+                            ${subtitle ? `<div class="text-sm text-muted-foreground truncate">${escapeHtml(subtitle)}</div>` : ''}
+                        </div>
+                        <svg class="h-4 w-4 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </button>`;
+            }).join('');
+        }
+
+        function selectHADevice(device) {
+            closeHAModal();
+
+            // Open the new device form
+            htmx.ajax('GET', 'devices/new', {target: '#form-container', swap: 'innerHTML'}).then(() => {
+                // Pre-fill the form fields after the form loads
+                setTimeout(() => {
+                    const name = device.name_by_user || device.name || '';
+                    const manufacturer = device.manufacturer || '';
+                    const model = device.model || '';
+                    const area = device.area_name || '';
+
+                    document.getElementById('name').value = name;
+                    document.getElementById('manufacturer').value = manufacturer;
+                    document.getElementById('model').value = model;
+
+                    // Add area to notes if present
+                    if (area) {
+                        document.getElementById('notes').value = `Area: ${area}`;
+                    }
+
+                    // Focus on setup code since that's what they need to enter
+                    document.getElementById('setup_code').focus();
+                }, 100);
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('ha-modal').classList.contains('hidden')) {
+                closeHAModal();
+            }
+        });
+    </script>
 </body>
 </html>
 
