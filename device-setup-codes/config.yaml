@@ -1,0 +1,24 @@
+name: "Device Setup Codes"
+description: "Store and manage HomeKit, Matter, Ring, and Homematic setup codes"
+version: "1.0.0"
+slug: "device-setup-codes"
+init: false
+arch:
+  - amd64
+  - aarch64
+  - armv7
+ports:
+  8099/tcp: 8099
+ports_description:
+  8099/tcp: "Web UI"
+map:
+  - config:rw
+options:
+  port: 8099
+schema:
+  port: int
+webui: "http://[HOST]:[PORT:8099]"
+ingress: true
+ingress_port: 8099
+panel_icon: "mdi:qrcode"
+panel_title: "Device Codes"
