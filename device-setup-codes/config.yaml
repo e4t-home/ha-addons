@@ -14,6 +14,7 @@ ports_description:
 map:
   - config:rw
 hassio_api: true
+homeassistant_api: true
 auth_api: true
 options:
   port: 8099
