@@ -61,6 +61,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/devices/new", s.handleNewDeviceForm)
 	mux.HandleFunc("/devices/search", s.handleSearch)
 	mux.HandleFunc("/devices/export", s.handleExportJSON)
+	mux.HandleFunc("/devices/import", s.handleImportJSON)
 	mux.HandleFunc("/devices/", s.handleDevice)
 	mux.HandleFunc("/ha/devices", s.handleHADevices)
 
@@ -294,6 +295,58 @@ func (s *Server) handleExportJSON(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"device-setup-codes.json\"")
 	json.NewEncoder(w).Encode(devices)
+}
+
+func (s *Server) handleImportJSON(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "Failed to read file: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	var devices []Device
+	if err := json.NewDecoder(file).Decode(&devices); err != nil {
+		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var imported, skipped int
+	var skippedIDs []int64
+
+	for _, d := range devices {
+		exists, err := s.db.DeviceExists(d.ID)
+		if err != nil {
+			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if exists {
+			skipped++
+			skippedIDs = append(skippedIDs, d.ID)
+			continue
+		}
+
+		if err := s.db.CreateDeviceWithID(&d); err != nil {
+			http.Error(w, "Failed to import device: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		imported++
+	}
+
+	result := map[string]any{
+		"imported":   imported,
+		"skipped":    skipped,
+		"skippedIDs": skippedIDs,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
 }
 
 // handleHADevices fetches devices from Home Assistant's device registry

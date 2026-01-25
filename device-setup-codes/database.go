@@ -177,3 +177,17 @@ func (db *DB) DeleteDevice(id int64) error {
 	_, err := db.Exec(`DELETE FROM devices WHERE id = ?`, id)
 	return err
 }
+
+func (db *DB) DeviceExists(id int64) (bool, error) {
+	var exists bool
+	err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM devices WHERE id = ?)`, id).Scan(&exists)
+	return exists, err
+}
+
+func (db *DB) CreateDeviceWithID(d *Device) error {
+	_, err := db.Exec(`
+		INSERT INTO devices (id, name, type, model, manufacturer, setup_code, notes, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, d.ID, d.Name, d.Type, d.Model, d.Manufacturer, d.SetupCode, d.Notes, d.CreatedAt, d.UpdatedAt)
+	return err
+}
