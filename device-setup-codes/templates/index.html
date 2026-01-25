@@ -59,7 +59,7 @@
                 <p class="text-sm text-muted-foreground mt-1">Manage your IoT device pairing codes</p>
             </div>
             <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    hx-get="/devices/new"
+                    hx-get="devices/new"
                     hx-target="#form-container"
                     hx-swap="innerHTML">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@
                        name="q"
                        placeholder="Search devices..."
                        class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                       hx-get="/devices/search"
+                       hx-get="devices/search"
                        hx-trigger="input changed delay:300ms, search"
                        hx-target="#device-list"
                        hx-swap="innerHTML">
@@ -136,7 +136,7 @@
         <!-- Actions -->
         <div class="flex items-center gap-1">
             <button class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    hx-get="/devices/{{.ID}}/edit"
+                    hx-get="devices/{{.ID}}/edit"
                     hx-target="#form-container"
                     hx-swap="innerHTML"
                     title="Edit">
@@ -146,7 +146,7 @@
                 </svg>
             </button>
             <button class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    hx-delete="/devices/{{.ID}}"
+                    hx-delete="devices/{{.ID}}"
                     hx-target="#device-list"
                     hx-swap="innerHTML"
                     hx-confirm="Delete this device?"
@@ -182,19 +182,19 @@
 {{define "device-icon"}}
 {{if eq . "homekit"}}
 <div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="/static/homnekit.png" alt="HomeKit" class="h-6 w-6 object-contain">
+    <img src="static/homnekit.png" alt="HomeKit" class="h-6 w-6 object-contain">
 </div>
 {{else if eq . "matter"}}
 <div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="/static/matter.png" alt="Matter" class="h-6 w-6 object-contain">
+    <img src="static/matter.png" alt="Matter" class="h-6 w-6 object-contain">
 </div>
 {{else if eq . "ring"}}
 <div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="/static/ring.png" alt="Ring" class="h-6 w-6 object-contain">
+    <img src="static/ring.png" alt="Ring" class="h-6 w-6 object-contain">
 </div>
 {{else if eq . "homematic"}}
 <div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="/static/homematic_ip.png" alt="Homematic" class="h-6 w-6 object-contain">
+    <img src="static/homematic_ip.png" alt="Homematic" class="h-6 w-6 object-contain">
 </div>
 {{end}}
 {{end}}
@@ -227,7 +227,7 @@
         </button>
     </div>
 
-    <form {{if .IsNew}}hx-post="/devices"{{else}}hx-put="/devices/{{.Device.ID}}"{{end}}
+    <form {{if .IsNew}}hx-post="devices"{{else}}hx-put="devices/{{.Device.ID}}"{{end}}
           hx-target="#device-list"
           hx-swap="innerHTML"
           hx-on::after-request="document.getElementById('form-container').innerHTML = ''">
