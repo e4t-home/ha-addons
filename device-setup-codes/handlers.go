@@ -2,13 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
+
+	"github.com/gorilla/websocket"
 )
 
 // HADevice represents a device from Home Assistant's device registry
@@ -331,68 +334,125 @@ func (s *Server) handleHADevices(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
+var msgID atomic.Int64
+
+// connectHA establishes a WebSocket connection to Home Assistant and authenticates
+func connectHA(token string) (*websocket.Conn, error) {
+	header := http.Header{}
+	conn, _, err := websocket.DefaultDialer.Dial("ws://supervisor/core/websocket", header)
+	if err != nil {
+		return nil, fmt.Errorf("websocket dial: %w", err)
+	}
+
+	// Read auth_required message
+	var authReq map[string]any
+	if err := conn.ReadJSON(&authReq); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("read auth_required: %w", err)
+	}
+
+	// Send auth message
+	authMsg := map[string]string{
+		"type":         "auth",
+		"access_token": token,
+	}
+	if err := conn.WriteJSON(authMsg); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("write auth: %w", err)
+	}
+
+	// Read auth response
+	var authResp map[string]any
+	if err := conn.ReadJSON(&authResp); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("read auth response: %w", err)
+	}
+
+	if authResp["type"] != "auth_ok" {
+		conn.Close()
+		return nil, fmt.Errorf("auth failed: %v", authResp)
+	}
+
+	return conn, nil
+}
+
 func (s *Server) fetchHADevices(token string) ([]HADevice, error) {
-	req, err := http.NewRequest("POST", "http://supervisor/core/api/config/device_registry/list", nil)
+	conn, err := connectHA(token)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
+	defer conn.Close()
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	// Send device registry list command
+	id := msgID.Add(1)
+	cmd := map[string]any{
+		"id":   id,
+		"type": "config/device_registry/list",
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, &httpError{StatusCode: resp.StatusCode, Message: string(body)}
+	if err := conn.WriteJSON(cmd); err != nil {
+		return nil, fmt.Errorf("write command: %w", err)
 	}
 
-	var devices []HADevice
-	if err := json.NewDecoder(resp.Body).Decode(&devices); err != nil {
-		return nil, err
+	// Read response
+	var resp struct {
+		ID      int64      `json:"id"`
+		Type    string     `json:"type"`
+		Success bool       `json:"success"`
+		Result  []HADevice `json:"result"`
+		Error   *struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := conn.ReadJSON(&resp); err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
 	}
 
-	return devices, nil
+	if !resp.Success {
+		if resp.Error != nil {
+			return nil, fmt.Errorf("%s: %s", resp.Error.Code, resp.Error.Message)
+		}
+		return nil, fmt.Errorf("unknown error")
+	}
+
+	return resp.Result, nil
 }
 
 func (s *Server) fetchHAAreas(token string) (map[string]string, error) {
-	req, err := http.NewRequest("POST", "http://supervisor/core/api/config/area_registry/list", nil)
+	conn, err := connectHA(token)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
+	defer conn.Close()
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
+	// Send area registry list command
+	id := msgID.Add(1)
+	cmd := map[string]any{
+		"id":   id,
+		"type": "config/area_registry/list",
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, nil // Areas are optional, don't fail
+	if err := conn.WriteJSON(cmd); err != nil {
+		return nil, fmt.Errorf("write command: %w", err)
 	}
 
-	var areas []HAArea
-	if err := json.NewDecoder(resp.Body).Decode(&areas); err != nil {
-		return nil, err
+	// Read response
+	var resp struct {
+		ID      int64    `json:"id"`
+		Type    string   `json:"type"`
+		Success bool     `json:"success"`
+		Result  []HAArea `json:"result"`
+	}
+	if err := conn.ReadJSON(&resp); err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if !resp.Success {
+		return nil, nil // Areas are optional
 	}
 
 	result := make(map[string]string)
-	for _, a := range areas {
+	for _, a := range resp.Result {
 		result[a.AreaID] = a.Name
 	}
 	return result, nil
-}
-
-type httpError struct {
-	StatusCode int
-	Message    string
-}
-
-func (e *httpError) Error() string {
-	return e.Message
 }
