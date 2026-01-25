@@ -60,6 +60,7 @@ func (s *Server) Routes() http.Handler {
 	mux.HandleFunc("/devices", s.handleDevices)
 	mux.HandleFunc("/devices/new", s.handleNewDeviceForm)
 	mux.HandleFunc("/devices/search", s.handleSearch)
+	mux.HandleFunc("/devices/export", s.handleExportJSON)
 	mux.HandleFunc("/devices/", s.handleDevice)
 	mux.HandleFunc("/ha/devices", s.handleHADevices)
 
@@ -281,6 +282,18 @@ func (s *Server) handleDeleteDevice(w http.ResponseWriter, r *http.Request, id i
 	if err := s.tmpl.ExecuteTemplate(w, "device-list", devices); err != nil {
 		log.Printf("template error: %v", err)
 	}
+}
+
+func (s *Server) handleExportJSON(w http.ResponseWriter, r *http.Request) {
+	devices, err := s.db.ListDevices()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", "attachment; filename=\"device-setup-codes.json\"")
+	json.NewEncoder(w).Encode(devices)
 }
 
 // handleHADevices fetches devices from Home Assistant's device registry
