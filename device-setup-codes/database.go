@@ -77,14 +77,39 @@ func (db *DB) ListDevices() ([]Device, error) {
 	return devices, rows.Err()
 }
 
-func (db *DB) SearchDevices(query string) ([]Device, error) {
+func (db *DB) SearchDevices(query, deviceType string) ([]Device, error) {
 	searchTerm := "%" + query + "%"
-	rows, err := db.Query(`
-		SELECT id, name, type, COALESCE(model, ''), COALESCE(manufacturer, ''), setup_code, notes, created_at, updated_at
-		FROM devices
-		WHERE name LIKE ? OR model LIKE ? OR manufacturer LIKE ? OR setup_code LIKE ? OR notes LIKE ?
-		ORDER BY name ASC
-	`, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm)
+	
+	var rows *sql.Rows
+	var err error
+	
+	if query == "" && deviceType != "" {
+		// Only filter by type
+		rows, err = db.Query(`
+			SELECT id, name, type, COALESCE(model, ''), COALESCE(manufacturer, ''), setup_code, notes, created_at, updated_at
+			FROM devices
+			WHERE type = ?
+			ORDER BY name ASC
+		`, deviceType)
+	} else if query != "" && deviceType != "" {
+		// Filter by both query and type
+		rows, err = db.Query(`
+			SELECT id, name, type, COALESCE(model, ''), COALESCE(manufacturer, ''), setup_code, notes, created_at, updated_at
+			FROM devices
+			WHERE (name LIKE ? OR model LIKE ? OR manufacturer LIKE ? OR setup_code LIKE ? OR notes LIKE ?)
+			AND type = ?
+			ORDER BY name ASC
+		`, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, deviceType)
+	} else {
+		// Only filter by query
+		rows, err = db.Query(`
+			SELECT id, name, type, COALESCE(model, ''), COALESCE(manufacturer, ''), setup_code, notes, created_at, updated_at
+			FROM devices
+			WHERE name LIKE ? OR model LIKE ? OR manufacturer LIKE ? OR setup_code LIKE ? OR notes LIKE ?
+			ORDER BY name ASC
+		`, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm)
+	}
+	
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,5 @@
 name: "Device Setup Codes"
-description: "Store and manage HomeKit, Matter, Ring, and Homematic setup codes"
+description: "Store and manage HomeKit, Matter, and Ring setup codes"
 version: "1.1.0"
 slug: "device-setup-codes"
 init: false

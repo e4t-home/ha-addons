@@ -68,17 +68,9 @@
     <div class="max-w-3xl mx-auto px-6 py-10">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
-        <div>
-          <h1 class="text-2xl font-semibold tracking-tight">
-            Device Setup Codes
-          </h1>
-          <p class="text-sm text-muted-foreground mt-1">
-            Manage your IoT device pairing codes
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 w-full">
           <button
-            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors w-full"
             @click="openHAModal()"
           >
             <svg
@@ -96,7 +88,7 @@
             Import from HA
           </button>
           <button
-            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors w-full"
             hx-get="devices/new"
             hx-target="#form-container"
             hx-swap="innerHTML"
@@ -271,27 +263,89 @@
 
       <!-- Search Bar -->
       <div class="mb-6">
-        <div class="relative">
-          <svg
-            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text"
-            name="q"
-            placeholder="Search devices..."
-            class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        <div class="flex gap-3">
+          <div class="relative flex-1">
+            <svg
+              class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              name="q"
+              id="search-input"
+              placeholder="Search devices..."
+              class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              hx-get="devices/search"
+              hx-trigger="input changed delay:300ms, search"
+              hx-target="#device-list"
+              hx-swap="innerHTML"
+              hx-include="#type-filter"
+            />
+          </div>
+          <select
+            name="type"
+            id="type-filter"
+            class="flex h-9 rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
             hx-get="devices/search"
-            hx-trigger="input changed delay:300ms, search"
+            hx-trigger="change"
             hx-target="#device-list"
             hx-swap="innerHTML"
-          />
+            hx-include="#search-input"
+            style="
+              background-repeat: no-repeat;
+              background-position: 8px center;
+              background-size: 16px 16px;
+              padding-left: 32px;
+            "
+            onchange="
+              this.style.backgroundImage = this.value
+                ? 'url(static/' +
+                  this.value.replace('homekit', 'homnekit') +
+                  '.png)'
+                : 'none'
+            "
+          >
+            <option value="">All Types</option>
+            <option
+              value="homekit"
+              style="
+                background: url(&quot;static/homnekit.png&quot;) no-repeat left
+                  center;
+                background-size: 16px 16px;
+                padding-left: 24px;
+              "
+            >
+              HomeKit
+            </option>
+            <option
+              value="matter"
+              style="
+                background: url(&quot;static/matter.png&quot;) no-repeat left
+                  center;
+                background-size: 16px 16px;
+                padding-left: 24px;
+              "
+            >
+              Matter
+            </option>
+            <option
+              value="ring"
+              style="
+                background: url(&quot;static/ring.png&quot;) no-repeat left
+                  center;
+                background-size: 16px 16px;
+                padding-left: 24px;
+              "
+            >
+              Ring
+            </option>
+          </select>
         </div>
       </div>
 
@@ -309,6 +363,22 @@
     </style>
 
     <script>
+      function copyCode(btn, code) {
+        navigator.clipboard.writeText(code);
+        const icon = btn.querySelector("svg");
+        const originalHTML = icon.innerHTML;
+        btn.classList.add("text-green-600");
+        btn.classList.remove("text-muted-foreground");
+        btn.title = "Copied!";
+        icon.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
+        setTimeout(() => {
+          icon.innerHTML = originalHTML;
+          btn.classList.remove("text-green-600");
+          btn.classList.add("text-muted-foreground");
+          btn.title = "Copy";
+        }, 2000);
+      }
+
       function deviceApp() {
         return {
           haModal: false,
@@ -416,7 +486,7 @@
           >{{.SetupCode}}</code
         >
         <button
-          onclick="navigator.clipboard.writeText('{{.SetupCode}}')"
+          onclick="copyCode(this, '{{.SetupCode}}')"
           class="text-muted-foreground hover:text-foreground transition-colors"
           title="Copy"
         >
@@ -524,16 +594,6 @@
 >
   <img src="static/ring.png" alt="Ring" class="h-6 w-6 object-contain" />
 </div>
-{{else if eq . "homematic"}}
-<div
-  class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
->
-  <img
-    src="static/homematic_ip.png"
-    alt="Homematic"
-    class="h-6 w-6 object-contain"
-  />
-</div>
 {{end}} {{end}} {{define "device-badge"}} {{if eq . "homekit"}}
 <span
   class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
@@ -548,11 +608,6 @@
 <span
   class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
   >Ring</span
->
-{{else if eq . "homematic"}}
-<span
-  class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
-  >Homematic</span
 >
 {{end}} {{end}} {{define "device-form"}}
 <div class="border border-border rounded-lg p-6 mb-6">
@@ -609,11 +664,16 @@
             name="type"
             required
             class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+            style="background-repeat: no-repeat; background-position: 8px center; background-size: 16px 16px; padding-left: 32px;"
+            onchange="this.style.backgroundImage = this.value ? 'url(static/' + this.value.replace('homekit', 'homnekit') + '.png)' : 'none';"
+            {{if .Device.Type}}
+            style="background-image: url('static/{{if eq .Device.Type "homekit"}}homnekit{{else}}{{.Device.Type}}{{end}}.png'); background-repeat: no-repeat; background-position: 8px center; background-size: 16px 16px; padding-left: 32px;"
+            {{end}}
           >
             {{range $.DeviceTypes}}
-            <option value="{{.}}" {{if eq . $.Device.Type}}selected{{end}}>
+            <option value="{{.}}" {{if eq . $.Device.Type}}selected{{end}} style="background: url('static/{{if eq . "homekit"}}homnekit{{else}}{{.}}{{end}}.png') no-repeat left center; background-size: 16px 16px; padding-left: 24px;">
               {{if eq . "homekit"}}HomeKit{{else if eq . "matter"}}Matter{{else
-              if eq . "ring"}}Ring{{else if eq . "homematic"}}Homematic{{end}}
+              if eq . "ring"}}Ring{{end}}
             </option>
             {{end}}
           </select>

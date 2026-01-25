@@ -154,14 +154,15 @@ func (s *Server) handleListDevices(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
+	deviceType := r.URL.Query().Get("type")
 
 	var devices []Device
 	var err error
 
-	if query == "" {
+	if query == "" && deviceType == "" {
 		devices, err = s.db.ListDevices()
 	} else {
-		devices, err = s.db.SearchDevices(query)
+		devices, err = s.db.SearchDevices(query, deviceType)
 	}
 
 	if err != nil {

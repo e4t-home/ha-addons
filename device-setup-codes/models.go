@@ -5,17 +5,15 @@ import "time"
 type DeviceType string
 
 const (
-	DeviceTypeHomeKit   DeviceType = "homekit"
-	DeviceTypeMatter    DeviceType = "matter"
-	DeviceTypeRing      DeviceType = "ring"
-	DeviceTypeHomematic DeviceType = "homematic"
+	DeviceTypeHomeKit DeviceType = "homekit"
+	DeviceTypeMatter  DeviceType = "matter"
+	DeviceTypeRing    DeviceType = "ring"
 )
 
 var DeviceTypes = []DeviceType{
 	DeviceTypeHomeKit,
 	DeviceTypeMatter,
 	DeviceTypeRing,
-	DeviceTypeHomematic,
 }
 
 type Device struct {
