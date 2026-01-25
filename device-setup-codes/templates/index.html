@@ -1,475 +1,698 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Device Setup Codes</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script
+      src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"
+      defer
+    ></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        border: "hsl(214.3 31.8% 91.4%)",
-                        input: "hsl(214.3 31.8% 91.4%)",
-                        ring: "hsl(222.2 84% 4.9%)",
-                        background: "hsl(0 0% 100%)",
-                        foreground: "hsl(222.2 84% 4.9%)",
-                        primary: {
-                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
-                            foreground: "hsl(210 40% 98%)",
-                        },
-                        secondary: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(222.2 47.4% 11.2%)",
-                        },
-                        muted: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(215.4 16.3% 46.9%)",
-                        },
-                        accent: {
-                            DEFAULT: "hsl(210 40% 96.1%)",
-                            foreground: "hsl(222.2 47.4% 11.2%)",
-                        },
-                        destructive: {
-                            DEFAULT: "hsl(0 84.2% 60.2%)",
-                            foreground: "hsl(210 40% 98%)",
-                        },
-                    },
-                    borderRadius: {
-                        lg: "0.5rem",
-                        md: "calc(0.5rem - 2px)",
-                        sm: "calc(0.5rem - 4px)",
-                    },
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(214.3 31.8% 91.4%)",
+              input: "hsl(214.3 31.8% 91.4%)",
+              ring: "hsl(222.2 84% 4.9%)",
+              background: "hsl(0 0% 100%)",
+              foreground: "hsl(222.2 84% 4.9%)",
+              primary: {
+                DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                foreground: "hsl(210 40% 98%)",
+              },
+              secondary: {
+                DEFAULT: "hsl(210 40% 96.1%)",
+                foreground: "hsl(222.2 47.4% 11.2%)",
+              },
+              muted: {
+                DEFAULT: "hsl(210 40% 96.1%)",
+                foreground: "hsl(215.4 16.3% 46.9%)",
+              },
+              accent: {
+                DEFAULT: "hsl(210 40% 96.1%)",
+                foreground: "hsl(222.2 47.4% 11.2%)",
+              },
+              destructive: {
+                DEFAULT: "hsl(0 84.2% 60.2%)",
+                foreground: "hsl(210 40% 98%)",
+              },
+            },
+            borderRadius: {
+              lg: "0.5rem",
+              md: "calc(0.5rem - 2px)",
+              sm: "calc(0.5rem - 4px)",
+            },
+          },
+        },
+      };
     </script>
     <style>
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
     </style>
-</head>
-<body class="min-h-screen bg-background text-foreground antialiased">
+  </head>
+  <body
+    class="min-h-screen bg-background text-foreground antialiased"
+    x-data="deviceApp()"
+  >
     <div class="max-w-3xl mx-auto px-6 py-10">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-semibold tracking-tight">Device Setup Codes</h1>
-                <p class="text-sm text-muted-foreground mt-1">Manage your IoT device pairing codes</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onclick="openHADevicePicker()">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                        <path d="M3 3v5h5"/>
-                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-                        <path d="M16 16h5v5"/>
-                    </svg>
-                    Import from HA
-                </button>
-                <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                        hx-get="devices/new"
-                        hx-target="#form-container"
-                        hx-swap="innerHTML">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 5v14m-7-7h14"/>
-                    </svg>
-                    Add Device
-                </button>
-            </div>
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">
+            Device Setup Codes
+          </h1>
+          <p class="text-sm text-muted-foreground mt-1">
+            Manage your IoT device pairing codes
+          </p>
         </div>
-
-        <!-- HA Device Picker Modal -->
-        <div id="ha-modal" class="fixed inset-0 z-50 hidden">
-            <div class="fixed inset-0 bg-black/50" onclick="closeHAModal()"></div>
-            <div class="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-background rounded-lg shadow-lg flex flex-col max-h-[90vh]">
-                <div class="flex items-center justify-between p-4 border-b border-border">
-                    <h2 class="text-lg font-semibold">Import from Home Assistant</h2>
-                    <button onclick="closeHAModal()" class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M18 6 6 18"/>
-                            <path d="m6 6 12 12"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-4 border-b border-border">
-                    <div class="relative">
-                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.3-4.3"/>
-                        </svg>
-                        <input type="text" id="ha-search" placeholder="Search devices..."
-                               oninput="filterHADevices(this.value)"
-                               class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-                    </div>
-                </div>
-                <div id="ha-device-list" class="flex-1 overflow-y-auto p-2">
-                    <div class="flex items-center justify-center py-12">
-                        <svg class="animate-spin h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+            @click="openHAModal()"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 16h5v5" />
+            </svg>
+            Import from HA
+          </button>
+          <button
+            class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            hx-get="devices/new"
+            hx-target="#form-container"
+            hx-swap="innerHTML"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 5v14m-7-7h14" />
+            </svg>
+            Add Device
+          </button>
         </div>
+      </div>
 
-        <!-- Search Bar -->
-        <div class="mb-6">
+      <!-- HA Device Picker Modal -->
+      <div
+        id="ha-modal"
+        class="fixed inset-0 z-50"
+        x-show="haModal"
+        x-cloak
+        @keydown.escape.window="haModal = false"
+      >
+        <div class="fixed inset-0 bg-black/50" @click="haModal = false"></div>
+        <div
+          class="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-background rounded-lg shadow-lg flex flex-col max-h-[90vh]"
+        >
+          <div
+            class="flex items-center justify-between p-4 border-b border-border"
+          >
+            <h2 class="text-lg font-semibold">Import from Home Assistant</h2>
+            <button
+              @click="haModal = false"
+              class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              <svg
+                class="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="p-4 border-b border-border">
             <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8"/>
-                    <path d="m21 21-4.3-4.3"/>
-                </svg>
-                <input type="text"
-                       name="q"
-                       placeholder="Search devices..."
-                       class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                       hx-get="devices/search"
-                       hx-trigger="input changed delay:300ms, search"
-                       hx-target="#device-list"
-                       hx-swap="innerHTML">
+              <svg
+                class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <input
+                type="text"
+                id="ha-search"
+                placeholder="Search devices..."
+                x-model="haSearch"
+                class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              />
             </div>
+          </div>
+          <div id="ha-device-list" class="flex-1 overflow-y-auto p-2">
+            <template x-if="haLoading">
+              <div class="flex items-center justify-center py-12">
+                <svg
+                  class="animate-spin h-6 w-6 text-muted-foreground"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+              </div>
+            </template>
+            <template x-if="haError">
+              <div class="text-center py-12 px-4">
+                <div
+                  class="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4"
+                >
+                  <svg
+                    class="h-6 w-6 text-destructive"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <p class="text-sm text-muted-foreground" x-text="haError"></p>
+              </div>
+            </template>
+            <template
+              x-if="!haLoading && !haError && filteredHADevices.length === 0"
+            >
+              <div class="text-center py-12">
+                <p class="text-sm text-muted-foreground">No devices found</p>
+              </div>
+            </template>
+            <template
+              x-if="!haLoading && !haError && filteredHADevices.length > 0"
+            >
+              <div>
+                <template x-for="device in filteredHADevices" :key="device.id">
+                  <button
+                    @click="selectHADevice(device)"
+                    class="w-full flex items-center gap-3 p-3 rounded-md hover:bg-accent text-left transition-colors"
+                  >
+                    <div
+                      class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
+                    >
+                      <svg
+                        class="h-5 w-5 text-muted-foreground"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <path d="M12 12h.01" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div
+                        class="font-medium truncate"
+                        x-text="device.name_by_user || device.name || 'Unknown Device'"
+                      ></div>
+                      <div
+                        class="text-sm text-muted-foreground truncate"
+                        x-text="[device.manufacturer, device.model, device.area_name].filter(Boolean).join(' · ')"
+                      ></div>
+                    </div>
+                    <svg
+                      class="h-4 w-4 text-muted-foreground flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                </template>
+              </div>
+            </template>
+          </div>
         </div>
+      </div>
 
-        <!-- Form Container -->
-        <div id="form-container"></div>
-
-        <!-- Device List -->
-        <div id="device-list">
-            {{template "device-list" .Devices}}
+      <!-- Search Bar -->
+      <div class="mb-6">
+        <div class="relative">
+          <svg
+            class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            name="q"
+            placeholder="Search devices..."
+            class="flex h-9 w-full rounded-md border border-input bg-background pl-10 pr-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            hx-get="devices/search"
+            hx-trigger="input changed delay:300ms, search"
+            hx-target="#device-list"
+            hx-swap="innerHTML"
+          />
         </div>
+      </div>
+
+      <!-- Form Container -->
+      <div id="form-container"></div>
+
+      <!-- Device List -->
+      <div id="device-list">{{template "device-list" .Devices}}</div>
     </div>
+
+    <style>
+      [x-cloak] {
+        display: none !important;
+      }
+    </style>
 
     <script>
-        let haDevices = [];
+      function deviceApp() {
+        return {
+          haModal: false,
+          haDevices: [],
+          haSearch: "",
+          haLoading: false,
+          haError: null,
 
-        function openHADevicePicker() {
-            document.getElementById('ha-modal').classList.remove('hidden');
-            document.getElementById('ha-search').value = '';
-            fetchHADevices();
-        }
+          get filteredHADevices() {
+            if (!this.haSearch) return this.haDevices;
+            const q = this.haSearch.toLowerCase();
+            return this.haDevices.filter((d) => {
+              const name = (d.name_by_user || d.name || "").toLowerCase();
+              const manufacturer = (d.manufacturer || "").toLowerCase();
+              const model = (d.model || "").toLowerCase();
+              const area = (d.area_name || "").toLowerCase();
+              return (
+                name.includes(q) ||
+                manufacturer.includes(q) ||
+                model.includes(q) ||
+                area.includes(q)
+              );
+            });
+          },
 
-        function closeHAModal() {
-            document.getElementById('ha-modal').classList.add('hidden');
-        }
-
-        async function fetchHADevices() {
-            const listEl = document.getElementById('ha-device-list');
-            listEl.innerHTML = '<div class="flex items-center justify-center py-12">' +
-                '<svg class="animate-spin h-6 w-6 text-muted-foreground" fill="none" viewBox="0 0 24 24">' +
-                '<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>' +
-                '<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>' +
-                '</svg></div>';
+          async openHAModal() {
+            this.haModal = true;
+            this.haSearch = "";
+            this.haLoading = true;
+            this.haError = null;
 
             try {
-                const resp = await fetch('ha/devices');
-                if (!resp.ok) {
-                    const text = await resp.text();
-                    throw new Error(text);
-                }
-                haDevices = await resp.json();
-                renderHADevices(haDevices);
+              const resp = await fetch("ha/devices");
+              if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(text);
+              }
+              this.haDevices = await resp.json();
             } catch (err) {
-                listEl.innerHTML = '<div class="text-center py-12 px-4">' +
-                    '<div class="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-4">' +
-                    '<svg class="h-6 w-6 text-destructive" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">' +
-                    '<circle cx="12" cy="12" r="10"/>' +
-                    '<line x1="12" y1="8" x2="12" y2="12"/>' +
-                    '<line x1="12" y1="16" x2="12.01" y2="16"/>' +
-                    '</svg></div>' +
-                    '<p class="text-sm text-muted-foreground">' + escapeHtml(err.message) + '</p></div>';
+              this.haError = err.message;
+            } finally {
+              this.haLoading = false;
             }
-        }
+          },
 
-        function filterHADevices(query) {
-            const q = query.toLowerCase();
-            const filtered = haDevices.filter(d => {
-                const name = (d.name_by_user || d.name || '').toLowerCase();
-                const manufacturer = (d.manufacturer || '').toLowerCase();
-                const model = (d.model || '').toLowerCase();
-                const area = (d.area_name || '').toLowerCase();
-                return name.includes(q) || manufacturer.includes(q) || model.includes(q) || area.includes(q);
-            });
-            renderHADevices(filtered);
-        }
+          selectHADevice(device) {
+            this.haModal = false;
 
-        function renderHADevices(devices) {
-            const listEl = document.getElementById('ha-device-list');
-
-            if (devices.length === 0) {
-                listEl.innerHTML = '<div class="text-center py-12">' +
-                    '<p class="text-sm text-muted-foreground">No devices found</p></div>';
-                return;
-            }
-
-            listEl.innerHTML = devices.map(function(d) {
-                const name = d.name_by_user || d.name || 'Unknown Device';
-                const manufacturer = d.manufacturer || '';
-                const model = d.model || '';
-                const area = d.area_name || '';
-                const subtitle = [manufacturer, model, area].filter(Boolean).join(' · ');
-
-                return '<button onclick=\'selectHADevice(' + JSON.stringify(d).replace(/'/g, "&#39;") + ')\'' +
-                    ' class="w-full flex items-center gap-3 p-3 rounded-md hover:bg-accent text-left transition-colors">' +
-                    '<div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">' +
-                    '<svg class="h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">' +
-                    '<rect x="2" y="6" width="20" height="12" rx="2"/>' +
-                    '<path d="M12 12h.01"/>' +
-                    '</svg></div>' +
-                    '<div class="flex-1 min-w-0">' +
-                    '<div class="font-medium truncate">' + escapeHtml(name) + '</div>' +
-                    (subtitle ? '<div class="text-sm text-muted-foreground truncate">' + escapeHtml(subtitle) + '</div>' : '') +
-                    '</div>' +
-                    '<svg class="h-4 w-4 text-muted-foreground flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">' +
-                    '<path d="m9 18 6-6-6-6"/>' +
-                    '</svg></button>';
-            }).join('');
-        }
-
-        function selectHADevice(device) {
-            closeHAModal();
-
-            // Open the new device form
-            htmx.ajax('GET', 'devices/new', {target: '#form-container', swap: 'innerHTML'}).then(() => {
+            // Open the new device form via htmx
+            htmx
+              .ajax("GET", "devices/new", {
+                target: "#form-container",
+                swap: "innerHTML",
+              })
+              .then(() => {
                 // Pre-fill the form fields after the form loads
                 setTimeout(() => {
-                    const name = device.name_by_user || device.name || '';
-                    const manufacturer = device.manufacturer || '';
-                    const model = device.model || '';
-                    const area = device.area_name || '';
+                  const name = device.name_by_user || device.name || "";
+                  const manufacturer = device.manufacturer || "";
+                  const model = device.model || "";
+                  const area = device.area_name || "";
 
-                    document.getElementById('name').value = name;
-                    document.getElementById('manufacturer').value = manufacturer;
-                    document.getElementById('model').value = model;
+                  const nameEl = document.getElementById("name");
+                  const manufacturerEl =
+                    document.getElementById("manufacturer");
+                  const modelEl = document.getElementById("model");
+                  const notesEl = document.getElementById("notes");
+                  const setupCodeEl = document.getElementById("setup_code");
 
-                    // Add area to notes if present
-                    if (area) {
-                        document.getElementById('notes').value = `Area: ${area}`;
-                    }
-
-                    // Focus on setup code since that's what they need to enter
-                    document.getElementById('setup_code').focus();
+                  if (nameEl) nameEl.value = name;
+                  if (manufacturerEl) manufacturerEl.value = manufacturer;
+                  if (modelEl) modelEl.value = model;
+                  if (area && notesEl) notesEl.value = `Area: ${area}`;
+                  if (setupCodeEl) setupCodeEl.focus();
                 }, 100);
-            });
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !document.getElementById('ha-modal').classList.contains('hidden')) {
-                closeHAModal();
-            }
-        });
+              });
+          },
+        };
+      }
     </script>
-</body>
+  </body>
 </html>
 
-{{define "device-list"}}
-{{if .}}
+{{define "device-list"}} {{if .}}
 <div class="divide-y divide-border border border-border rounded-lg">
-    {{range .}}
-    <div class="flex items-center gap-4 p-4">
-        <!-- Device Icon -->
-        {{template "device-icon" .Type}}
+  {{range .}}
+  <div class="flex items-center gap-4 p-4">
+    <!-- Device Icon -->
+    {{template "device-icon" .Type}}
 
-        <!-- Device Info -->
-        <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-                <span class="font-medium">{{.Name}}</span>
-                {{template "device-badge" .Type}}
-            </div>
-            {{if or .Model .Manufacturer}}
-            <div class="text-sm text-muted-foreground mt-0.5">
-                {{if .Model}}{{.Model}}{{end}}{{if and .Model .Manufacturer}} · {{end}}{{if .Manufacturer}}{{.Manufacturer}}{{end}}
-            </div>
-            {{end}}
-            <div class="flex items-center gap-2 mt-1.5">
-                <code class="text-sm font-mono text-muted-foreground">{{.SetupCode}}</code>
-                <button onclick="navigator.clipboard.writeText('{{.SetupCode}}')"
-                        class="text-muted-foreground hover:text-foreground transition-colors"
-                        title="Copy">
-                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                    </svg>
-                </button>
-            </div>
-            {{if .Notes}}
-            <p class="text-sm text-muted-foreground mt-1">{{.Notes}}</p>
-            {{end}}
-        </div>
-
-        <!-- Actions -->
-        <div class="flex items-center gap-1">
-            <button class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                    hx-get="devices/{{.ID}}/edit"
-                    hx-target="#form-container"
-                    hx-swap="innerHTML"
-                    title="Edit">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                    <path d="m15 5 4 4"/>
-                </svg>
-            </button>
-            <button class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                    hx-delete="devices/{{.ID}}"
-                    hx-target="#device-list"
-                    hx-swap="innerHTML"
-                    hx-confirm="Delete this device?"
-                    title="Delete">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M3 6h18"/>
-                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                    <line x1="10" x2="10" y1="11" y2="17"/>
-                    <line x1="14" x2="14" y1="11" y2="17"/>
-                </svg>
-            </button>
-        </div>
+    <!-- Device Info -->
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2">
+        <span class="font-medium">{{.Name}}</span>
+        {{template "device-badge" .Type}}
+      </div>
+      {{if or .Model .Manufacturer}}
+      <div class="text-sm text-muted-foreground mt-0.5">
+        {{if .Model}}{{.Model}}{{end}}{{if and .Model .Manufacturer}} ·
+        {{end}}{{if .Manufacturer}}{{.Manufacturer}}{{end}}
+      </div>
+      {{end}}
+      <div class="flex items-center gap-2 mt-1.5">
+        <code class="text-sm font-mono text-muted-foreground"
+          >{{.SetupCode}}</code
+        >
+        <button
+          onclick="navigator.clipboard.writeText('{{.SetupCode}}')"
+          class="text-muted-foreground hover:text-foreground transition-colors"
+          title="Copy"
+        >
+          <svg
+            class="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+        </button>
+      </div>
+      {{if .Notes}}
+      <p class="text-sm text-muted-foreground mt-1">{{.Notes}}</p>
+      {{end}}
     </div>
-    {{end}}
+
+    <!-- Actions -->
+    <div class="flex items-center gap-1">
+      <button
+        class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        hx-get="devices/{{.ID}}/edit"
+        hx-target="#form-container"
+        hx-swap="innerHTML"
+        title="Edit"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          <path d="m15 5 4 4" />
+        </svg>
+      </button>
+      <button
+        class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+        hx-delete="devices/{{.ID}}"
+        hx-target="#device-list"
+        hx-swap="innerHTML"
+        hx-confirm="Delete this device?"
+        title="Delete"
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+          <line x1="10" x2="10" y1="11" y2="17" />
+          <line x1="14" x2="14" y1="11" y2="17" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  {{end}}
 </div>
 {{else}}
 <div class="border border-border border-dashed rounded-lg p-12 text-center">
-    <div class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-        <svg class="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <rect x="2" y="6" width="20" height="12" rx="2"/>
-            <path d="M12 12h.01"/>
-            <path d="M17 12h.01"/>
-            <path d="M7 12h.01"/>
-        </svg>
-    </div>
-    <h3 class="font-medium mb-1">No devices found</h3>
-    <p class="text-sm text-muted-foreground">Add your first device or try a different search.</p>
+  <div
+    class="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4"
+  >
+    <svg
+      class="h-6 w-6 text-muted-foreground"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+    >
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <path d="M12 12h.01" />
+      <path d="M17 12h.01" />
+      <path d="M7 12h.01" />
+    </svg>
+  </div>
+  <h3 class="font-medium mb-1">No devices found</h3>
+  <p class="text-sm text-muted-foreground">
+    Add your first device or try a different search.
+  </p>
 </div>
-{{end}}
-{{end}}
-
-{{define "device-icon"}}
-{{if eq . "homekit"}}
-<div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="static/homnekit.png" alt="HomeKit" class="h-6 w-6 object-contain">
+{{end}} {{end}} {{define "device-icon"}} {{if eq . "homekit"}}
+<div
+  class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
+>
+  <img src="static/homnekit.png" alt="HomeKit" class="h-6 w-6 object-contain" />
 </div>
 {{else if eq . "matter"}}
-<div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="static/matter.png" alt="Matter" class="h-6 w-6 object-contain">
+<div
+  class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
+>
+  <img src="static/matter.png" alt="Matter" class="h-6 w-6 object-contain" />
 </div>
 {{else if eq . "ring"}}
-<div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="static/ring.png" alt="Ring" class="h-6 w-6 object-contain">
+<div
+  class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
+>
+  <img src="static/ring.png" alt="Ring" class="h-6 w-6 object-contain" />
 </div>
 {{else if eq . "homematic"}}
-<div class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0">
-    <img src="static/homematic_ip.png" alt="Homematic" class="h-6 w-6 object-contain">
+<div
+  class="h-10 w-10 rounded-md bg-muted flex items-center justify-center flex-shrink-0"
+>
+  <img
+    src="static/homematic_ip.png"
+    alt="Homematic"
+    class="h-6 w-6 object-contain"
+  />
 </div>
-{{end}}
-{{end}}
-
-{{define "device-badge"}}
-{{if eq . "homekit"}}
-<span class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">HomeKit</span>
+{{end}} {{end}} {{define "device-badge"}} {{if eq . "homekit"}}
+<span
+  class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
+  >HomeKit</span
+>
 {{else if eq . "matter"}}
-<span class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">Matter</span>
+<span
+  class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
+  >Matter</span
+>
 {{else if eq . "ring"}}
-<span class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">Ring</span>
+<span
+  class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
+  >Ring</span
+>
 {{else if eq . "homematic"}}
-<span class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">Homematic</span>
-{{end}}
-{{end}}
-
-{{define "device-form"}}
+<span
+  class="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground"
+  >Homematic</span
+>
+{{end}} {{end}} {{define "device-form"}}
 <div class="border border-border rounded-lg p-6 mb-6">
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold">
-            {{if .IsNew}}Add Device{{else}}Edit Device{{end}}
-        </h2>
-        <button type="button"
-                onclick="document.getElementById('form-container').innerHTML = ''"
-                class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M18 6 6 18"/>
-                <path d="m6 6 12 12"/>
-            </svg>
-        </button>
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-lg font-semibold">
+      {{if .IsNew}}Add Device{{else}}Edit Device{{end}}
+    </h2>
+    <button
+      type="button"
+      onclick="document.getElementById('form-container').innerHTML = ''"
+      class="inline-flex items-center justify-center rounded-md h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+    >
+      <svg
+        class="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <form
+    {{if
+    .IsNew}}hx-post="devices"
+    {{else}}hx-put="devices/{{.Device.ID}}"
+    {{end}}
+    hx-target="#device-list"
+    hx-swap="innerHTML"
+    hx-on::after-request="document.getElementById('form-container').innerHTML = ''"
+  >
+    <div class="grid gap-4">
+      <div class="grid gap-2">
+        <label for="name" class="text-sm font-medium">Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value="{{.Device.Name}}"
+          required
+          placeholder="Living Room Light"
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="grid gap-2">
+          <label for="type" class="text-sm font-medium">Platform</label>
+          <select
+            id="type"
+            name="type"
+            required
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            {{range $.DeviceTypes}}
+            <option value="{{.}}" {{if eq . $.Device.Type}}selected{{end}}>
+              {{if eq . "homekit"}}HomeKit{{else if eq . "matter"}}Matter{{else
+              if eq . "ring"}}Ring{{else if eq . "homematic"}}Homematic{{end}}
+            </option>
+            {{end}}
+          </select>
+        </div>
+
+        <div class="grid gap-2">
+          <label for="manufacturer" class="text-sm font-medium"
+            >Manufacturer</label
+          >
+          <input
+            type="text"
+            id="manufacturer"
+            name="manufacturer"
+            value="{{.Device.Manufacturer}}"
+            placeholder="Philips, Ring, eQ-3..."
+            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
+      </div>
+
+      <div class="grid gap-2">
+        <label for="model" class="text-sm font-medium">Model</label>
+        <input
+          type="text"
+          id="model"
+          name="model"
+          value="{{.Device.Model}}"
+          placeholder="Ring Stickup Cam, HM-BSD, Hue Bridge..."
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div class="grid gap-2">
+        <label for="setup_code" class="text-sm font-medium">Setup Code</label>
+        <input
+          type="text"
+          id="setup_code"
+          name="setup_code"
+          value="{{.Device.SetupCode}}"
+          required
+          placeholder="123-45-678"
+          class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        />
+      </div>
+
+      <div class="grid gap-2">
+        <label for="notes" class="text-sm font-medium">
+          Notes
+          <span class="text-muted-foreground font-normal">(optional)</span>
+        </label>
+        <textarea
+          id="notes"
+          name="notes"
+          rows="2"
+          placeholder="Additional information..."
+          class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+        >
+{{.Device.Notes}}</textarea
+        >
+      </div>
     </div>
 
-    <form {{if .IsNew}}hx-post="devices"{{else}}hx-put="devices/{{.Device.ID}}"{{end}}
-          hx-target="#device-list"
-          hx-swap="innerHTML"
-          hx-on::after-request="document.getElementById('form-container').innerHTML = ''">
-
-        <div class="grid gap-4">
-            <div class="grid gap-2">
-                <label for="name" class="text-sm font-medium">Name</label>
-                <input type="text" id="name" name="name" value="{{.Device.Name}}" required
-                       placeholder="Living Room Light"
-                       class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="grid gap-2">
-                    <label for="type" class="text-sm font-medium">Platform</label>
-                    <select id="type" name="type" required
-                            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring">
-                        {{range $.DeviceTypes}}
-                        <option value="{{.}}" {{if eq . $.Device.Type}}selected{{end}}>
-                            {{if eq . "homekit"}}HomeKit{{else if eq . "matter"}}Matter{{else if eq . "ring"}}Ring{{else if eq . "homematic"}}Homematic{{end}}
-                        </option>
-                        {{end}}
-                    </select>
-                </div>
-
-                <div class="grid gap-2">
-                    <label for="manufacturer" class="text-sm font-medium">Manufacturer</label>
-                    <input type="text" id="manufacturer" name="manufacturer" value="{{.Device.Manufacturer}}"
-                           placeholder="Philips, Ring, eQ-3..."
-                           class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-                </div>
-            </div>
-
-            <div class="grid gap-2">
-                <label for="model" class="text-sm font-medium">Model</label>
-                <input type="text" id="model" name="model" value="{{.Device.Model}}"
-                       placeholder="Ring Stickup Cam, HM-BSD, Hue Bridge..."
-                       class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-            </div>
-
-            <div class="grid gap-2">
-                <label for="setup_code" class="text-sm font-medium">Setup Code</label>
-                <input type="text" id="setup_code" name="setup_code" value="{{.Device.SetupCode}}" required
-                       placeholder="123-45-678"
-                       class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
-            </div>
-
-            <div class="grid gap-2">
-                <label for="notes" class="text-sm font-medium">
-                    Notes <span class="text-muted-foreground font-normal">(optional)</span>
-                </label>
-                <textarea id="notes" name="notes" rows="2"
-                          placeholder="Additional information..."
-                          class="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none">{{.Device.Notes}}</textarea>
-            </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-border">
-            <button type="button"
-                    onclick="document.getElementById('form-container').innerHTML = ''"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
-                Cancel
-            </button>
-            <button type="submit"
-                    class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                {{if .IsNew}}Add Device{{else}}Save{{end}}
-            </button>
-        </div>
-    </form>
+    <div
+      class="flex items-center justify-end gap-2 mt-6 pt-4 border-t border-border"
+    >
+      <button
+        type="button"
+        onclick="document.getElementById('form-container').innerHTML = ''"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+      >
+        {{if .IsNew}}Add Device{{else}}Save{{end}}
+      </button>
+    </div>
+  </form>
 </div>
 {{end}}
