@@ -332,11 +332,12 @@ func (s *Server) handleHADevices(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) fetchHADevices(token string) ([]HADevice, error) {
-	req, err := http.NewRequest("GET", "http://supervisor/core/api/config/device_registry", nil)
+	req, err := http.NewRequest("POST", "http://supervisor/core/api/config/device_registry/list", nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -358,11 +359,12 @@ func (s *Server) fetchHADevices(token string) ([]HADevice, error) {
 }
 
 func (s *Server) fetchHAAreas(token string) (map[string]string, error) {
-	req, err := http.NewRequest("GET", "http://supervisor/core/api/config/area_registry", nil)
+	req, err := http.NewRequest("POST", "http://supervisor/core/api/config/area_registry/list", nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
