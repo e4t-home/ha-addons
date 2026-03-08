@@ -11,10 +11,8 @@ RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o gpsd-proxy .
 # Runtime stage
 FROM ${BUILD_FROM}
 
-RUN apk add --no-cache bash
-
 COPY --from=builder /app/gpsd-proxy /usr/local/bin/
-COPY run.sh /
-RUN chmod a+x /run.sh
 
-CMD [ "/run.sh" ]
+# Set up s6 service
+COPY run.sh /etc/services.d/gpsd-proxy/run
+RUN chmod a+x /etc/services.d/gpsd-proxy/run
