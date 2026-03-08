@@ -18,18 +18,15 @@ import (
 )
 
 type GPSDServer struct {
-	mu          sync.RWMutex
-	clients     map[net.Conn]bool
-	tpv         *TPVReport
-	sky         *SKYReport
-	deviceType  string
-	devicePath  string
-	tcpHost     string
-	tcpPort     int
-	baudRate    int
-	port        int
-	fix3DOnly   bool
-	logLevel    string
+	mu         sync.RWMutex
+	clients    map[net.Conn]bool
+	tpv        *TPVReport
+	sky        *SKYReport
+	devicePath string
+	baudRate   int
+	port       int
+	fix3DOnly  bool
+	logLevel   string
 }
 
 // TPV - Time-Position-Velocity report
@@ -91,13 +88,10 @@ type WatchReport struct {
 	JSON   bool   `json:"json"`
 }
 
-func NewGPSDServer(deviceType, device, tcpHost string, tcpPort, baud, port int, fix3DOnly bool, logLevel string) *GPSDServer {
+func NewGPSDServer(device string, baud, port int, fix3DOnly bool, logLevel string) *GPSDServer {
 	return &GPSDServer{
 		clients:    make(map[net.Conn]bool),
-		deviceType: deviceType,
 		devicePath: device,
-		tcpHost:    tcpHost,
-		tcpPort:    tcpPort,
 		baudRate:   baud,
 		port:       port,
 		fix3DOnly:  fix3DOnly,
@@ -139,14 +133,7 @@ func (s *GPSDServer) logError(format string, v ...interface{}) {
 
 func (s *GPSDServer) readGPS() {
 	for {
-		var reader io.Reader
-		var closer io.Closer
-
-		if s.deviceType == "tcp" {
-			reader, closer = s.connectTCP()
-		} else {
-			reader, closer = s.connectSerial()
-		}
+		reader, closer := s.connectSerial()
 
 		if reader == nil {
 			time.Sleep(5 * time.Second)
@@ -181,20 +168,6 @@ func (s *GPSDServer) connectSerial() (io.Reader, io.Closer) {
 
 	s.logInfo("Serial GPS device opened successfully")
 	return port, port
-}
-
-func (s *GPSDServer) connectTCP() (io.Reader, io.Closer) {
-	addr := fmt.Sprintf("%s:%d", s.tcpHost, s.tcpPort)
-	s.logInfo("Connecting to TCP GPS: %s", addr)
-
-	conn, err := net.DialTimeout("tcp", addr, 10*time.Second)
-	if err != nil {
-		s.logError("Failed to connect to TCP GPS: %v", err)
-		return nil, nil
-	}
-
-	s.logInfo("TCP GPS connected successfully")
-	return conn, conn
 }
 
 func (s *GPSDServer) processNMEAStream(reader *bufio.Reader) {
@@ -362,8 +335,8 @@ func (s *GPSDServer) handleCommand(conn net.Conn, cmd string) {
 	case strings.HasPrefix(cmd, "?VERSION"):
 		version := VersionReport{
 			Class:      "VERSION",
-			Release:    "gpsd-proxy 1.0.0",
-			Rev:        "1.0.0",
+			Release:    "gpsd-proxy 1.0.1",
+			Rev:        "1.0.1",
 			ProtoMajor: 3,
 			ProtoMinor: 14,
 		}
@@ -478,10 +451,7 @@ func (s *GPSDServer) Start() error {
 }
 
 func main() {
-	deviceType := flag.String("device-type", "serial", "Device type: serial or tcp")
 	device := flag.String("device", "/dev/ttyUSB0", "Serial GPS device path")
-	tcpHost := flag.String("tcp-host", "", "TCP GPS host")
-	tcpPort := flag.Int("tcp-port", 10110, "TCP GPS port")
 	baud := flag.Int("baud", 9600, "Baud rate for serial")
 	port := flag.Int("port", 2947, "GPSD server port")
 	fix3DOnly := flag.Bool("fix-3d-only", false, "Only broadcast 3D fixes")
@@ -491,7 +461,7 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(log.Ldate | log.Ltime)
 
-	server := NewGPSDServer(*deviceType, *device, *tcpHost, *tcpPort, *baud, *port, *fix3DOnly, *logLevel)
+	server := NewGPSDServer(*device, *baud, *port, *fix3DOnly, *logLevel)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}

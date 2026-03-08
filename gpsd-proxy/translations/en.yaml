@@ -1,24 +1,8 @@
 configuration:
-  device_type:
-    name: Device type
-    description: >-
-      Select serial for most use cases, like direct attached GPS dongle via USB or similar.
-      Select TCP for network connected devices, make sure to fill in TCP Host and TCP Port
-      in the optional settings below.
   device:
     name: GPS Device
     description: >-
-      Serial device providing GPS data. Make sure serial is selected above.
-      Ignored for TCP setup, but has to be selected (/dev/ttyS0 could be a good choice).
-  tcp_host:
-    name: TCP Host
-    description: >-
-      Hostname or IP address of the network GPS device. Only used when device type is TCP.
-  tcp_port:
-    name: TCP Port
-    description: >-
-      Port number for the network GPS device. Common values are 10110 or 2947.
-      Only used when device type is TCP.
+      Serial device providing GPS data. Select your USB GPS antenna from the list.
   baud_rate:
     name: Baud Rate
     description: >-
