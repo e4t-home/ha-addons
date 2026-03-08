@@ -3,17 +3,3 @@ configuration:
     name: GPS Device
     description: >-
       Serial device providing GPS data. Select your USB GPS antenna from the list.
-  baud_rate:
-    name: Baud Rate
-    description: >-
-      Serial communication speed. Most GPS devices use 9600, some older ones use 4800,
-      and some newer high-speed devices use 38400 or 115200.
-  fix_3d_only:
-    name: 3D Fix Only
-    description: >-
-      Only publish updated position when the GPS has a good fix
-      (3D Fix - minimum 3 satellites for positioning).
-  log_level:
-    name: Log Level
-    description: >-
-      Controls the verbosity of logging. Debug shows raw NMEA sentences.

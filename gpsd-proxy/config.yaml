@@ -1,7 +1,7 @@
 name: "GPSD Proxy"
-version: "1.0.1"
+version: "1.1.0"
 slug: "gpsd_proxy"
-description: "Connects to USB GPS antenna and serves GPSD protocol on port 2947"
+description: "Connects to a USB GPS antenna and serves the GPSD protocol on port 2947"
 arch:
   - amd64
   - aarch64
@@ -20,11 +20,5 @@ usb: true
 full_access: true
 options:
   device: "/dev/ttyUSB0"
-  baud_rate: 9600
-  fix_3d_only: true
-  log_level: "info"
 schema:
   device: device(subsystem=tty)
-  baud_rate: list(4800|9600|19200|38400|57600|115200)
-  fix_3d_only: bool
-  log_level: list(debug|info|warn|error)?
