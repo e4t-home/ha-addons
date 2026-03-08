@@ -16,8 +16,6 @@ ports:
 ports_description:
   2947/tcp: "GPSD protocol port"
 uart: true
-usb: true
-full_access: true
 options:
   device: "/dev/ttyUSB0"
 schema:
