@@ -11,6 +11,7 @@ arch:
 url: "https://github.com/e4t-home/ha-addons/tree/main/gpsd-proxy"
 startup: "system"
 boot: "auto"
+init: false
 ports:
   2947/tcp: 2947
 ports_description:
