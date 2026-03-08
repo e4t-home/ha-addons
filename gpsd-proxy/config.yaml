@@ -1,0 +1,36 @@
+name: "GPSD Proxy"
+version: "1.0.0"
+slug: "gpsd_proxy"
+description: "Connects to USB GPS antenna and serves GPSD protocol on port 2947"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+  - i386
+url: "https://github.com/e4t-home/ha-addons/tree/main/gpsd-proxy"
+startup: "system"
+boot: "auto"
+ports:
+  2947/tcp: 2947
+ports_description:
+  2947/tcp: "GPSD protocol port"
+uart: true
+usb: true
+full_access: true
+options:
+  device_type: "serial"
+  device: "/dev/ttyUSB0"
+  tcp_host: ""
+  tcp_port: 10110
+  baud_rate: 9600
+  fix_3d_only: true
+  log_level: "info"
+schema:
+  device_type: list(serial|tcp)
+  device: device(subsystem=tty)
+  tcp_host: str?
+  tcp_port: port?
+  baud_rate: list(4800|9600|19200|38400|57600|115200)
+  fix_3d_only: bool
+  log_level: list(debug|info|warn|error)?
