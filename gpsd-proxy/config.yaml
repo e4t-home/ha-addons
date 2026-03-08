@@ -1,5 +1,5 @@
 name: "GPSD Proxy"
-version: "1.1.1"
+version: "1.1.2"
 slug: "gpsd_proxy"
 description: "Connects to a USB GPS antenna and serves the GPSD protocol on port 2947"
 arch:
@@ -12,6 +12,7 @@ url: "https://github.com/e4t-home/ha-addons/tree/main/gpsd-proxy"
 startup: "system"
 boot: "auto"
 init: false
+hassio_api: true
 ports:
   2947/tcp: 2947
 ports_description:
